@@ -90,22 +90,18 @@ class Network:
                              for i in range(len(timeList))]
         self.resourceNeurons = []
         for k in range(machine):
-            for i in range(job):
-                for j in range(i, op):
-                    for p in range(job):
-                        for q in range(p, op):
-                            self.resourceNeurons.append(ResourceNeuron(
-                                self.startNeurons[(i*(job-1)+j*(op-1)+k)],
-                                self.startNeurons[(p*(job-1)+q*(op-1)+k)]))
+            for i in range(job * op):
+                for p in range(i + 1, job * op):
+                    self.resourceNeurons.append(ResourceNeuron(
+                        self.startNeurons[(i*machine+k)],
+                        self.startNeurons[(p*machine+k)]))
         self.scheduleNeurons = []
         for i in range(job):
-            for j in range(op):
-                for k in range(i, machine):
-                    for a in range(op):
-                        for b in range(a, machine):
-                            self.scheduleNeurons.append(ScheduleNeuron(
-                                self.startNeurons[(i*(job-1)+j*(op-1)+k)],
-                                self.startNeurons[(a*(job-1)+b*(op-1)+k)]))
+            for j in range(op*machine):
+                for a in range(j + 1, op*machine):
+                    self.scheduleNeurons.append(ScheduleNeuron(
+                        self.startNeurons[(i*(job-1)+j)],
+                        self.startNeurons[(i*(job-1)+a)]))
 
     def getStart(self):
         return self.startNeurons

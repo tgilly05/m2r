@@ -6,16 +6,27 @@ sn2 = HN.StartNeuron(1, 2, 1, 3, state=0)
 sc = HN.ScheduleNeuron(sn_test, sn2)
 rn = HN.ResourceNeuron(sn_test, sn2)
 
-timelist = [3, 2,
+timelist = [1, 2,
+            2, 3,
+            5, 2,
+            4, 1,
             4, 2,
-            1, 6,
-            2, 5,
-            7, 2,
-            1, 3]
+            3, 1]
 myNet = HN.Network(timelist, 3, 2, 2)
 
-print(sn_test.getLocation())
-print(sn_test.getEnd())
-print(sc.ac())
-print(rn.ac())
-print(len(myNet.getRes()))
+rounds = []
+rounds.append([i.getState() for i in myNet.getStart()])
+myNet.round()
+rounds.append([i.getState() for i in myNet.getStart()])
+myNet.round()
+rounds.append([i.getState() for i in myNet.getStart()])
+myNet.round()
+myNet.round()
+myNet.round()
+myNet.round()
+myNet.round()
+rounds.append([i.getState() for i in myNet.getStart()])
+print(rounds[0])
+print(rounds[1])
+print(rounds[2])
+print(rounds[3])

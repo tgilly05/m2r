@@ -5,12 +5,16 @@ import numpy as np
 class Neuron:
     def __init__(self, state=0):
         self.state = state
+        self.hold = state
 
     def ac(self, *args, **kwds):
         pass
 
     def getState(self):
         return self.state
+
+    def update(self):
+        self.state = self.hold
 
 
 class StartNeuron(Neuron):
@@ -23,7 +27,17 @@ class StartNeuron(Neuron):
         self.threshold = threshold
 
     def ac(self, network, weight=0.1):
-        N = np.dot(network.getState) + self.state
+        sum1 = 0
+        for pair in network.getSch():
+            sum1 += pair.getState()*weight
+        sum2 = 0
+        for pair in network.getRes():
+            sum2 += pair.getState()*weight
+        N = sum1 + sum2 + self.state
+        if N <= self.threshold:
+            self.hold = self.threshold
+            return self.threshold
+        self.hold = N
         return N
 
     def getEnd(self):
@@ -52,9 +66,9 @@ class ScheduleNeuron(Neuron):
         # applies the activation formula
         N = first.getState() + first.getTime() - last.getState()
         if N < 0:
-            self.state = 0
+            self.hold = 0
             return 0
-        self.state = N
+        self.hold = N
         return N
 
 
@@ -74,9 +88,9 @@ class ResourceNeuron(Neuron):
         # applies the activation formula
         N = last.getEnd() - first.getState()
         if N < first.getTime() + last.getTime():
-            self.state = N
+            self.hold = N
             return N
-        self.state = 0
+        self.hold = 0
         return 0
 
 
@@ -97,8 +111,8 @@ class Network:
                         self.startNeurons[(p*machine+k)]))
         self.scheduleNeurons = []
         for i in range(job):
-            for j in range(op*machine):
-                for a in range(j + 1, op*machine):
+            for j in range(op * machine):
+                for a in range(j + 1, op * machine):
                     self.scheduleNeurons.append(ScheduleNeuron(
                         self.startNeurons[(i*(job-1)+j)],
                         self.startNeurons[(i*(job-1)+a)]))

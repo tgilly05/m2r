@@ -29,34 +29,34 @@ class StartNeuron(Neuron):
         self.time = time
         self.threshold = threshold
 
-    def ac(self, network, weight=0.1):
+    def ac(self, network, weight=0.01):
         if self.op != 1:
             self.threshold = network.getStart()[
-                4*(self.job-1)+self.op-2].getEnd()
+                network.char()*(self.job-1)+self.op-2].getEnd()
         sum1 = 0
         for pair in network.getSch():
             c1 = (pair.n1.getLocation() == self.getLocation())
             c2 = (pair.n2.getLocation() == self.getLocation())
             if c1:
-                sum1 += pair.getState()[1]*0.05
+                sum1 += pair.getState()[1]*weight*5
             elif c2:
-                sum1 += pair.getState()[0]*0.05
+                sum1 += pair.getState()[0]*weight*5
         sum2 = 0
         for pair in network.getRes():
             c1 = (pair.n1.getLocation() == self.getLocation())
             c2 = (pair.n2.getLocation() == self.getLocation())
             if c1:
                 if pair.getState()[2]:
-                    sum2 += pair.getState()[1]*0.01
+                    sum2 += pair.getState()[1]*weight
                 else:
-                    sum2 += pair.getState()[0]*0.01
+                    sum2 += pair.getState()[0]*weight
             elif c2:
                 if pair.getState()[2]:
-                    sum2 += pair.getState()[0]*0.01
+                    sum2 += pair.getState()[0]*weight
                 else:
-                    sum2 += pair.getState()[1]*0.01
+                    sum2 += pair.getState()[1]*weight
         N = sum1 + sum2 + self.state
-        if N < self.threshold:
+        if N <= self.threshold:
             self.hold = self.threshold
             return self.threshold
         self.hold = N
@@ -87,8 +87,8 @@ class ScheduleNeuron(Neuron):
 
     def ac(self, network):
         # update incoming neuron states
-        ind1 = 4*(self.location[0][0]-1) + self.location[0][1] - 1
-        ind2 = 4*(self.location[1][0]-1) + self.location[1][1] - 1
+        ind1 = network.char()*(self.location[0][0]-1) + self.location[0][1] - 1
+        ind2 = network.char()*(self.location[1][0]-1) + self.location[1][1] - 1
         self.n1, self.n2 = network.getStart()[ind1], network.getStart()[ind2]
         # applies the activation formula
         N = self.n1.getState() + self.n1.getTime() - self.n2.getState()
@@ -108,8 +108,8 @@ class ResourceNeuron(Neuron):
 
     def ac(self, network):
         # update input neurons
-        ind1 = 4*(self.location[0][0]-1) + self.location[0][1] - 1
-        ind2 = 4*(self.location[1][0]-1) + self.location[1][1] - 1
+        ind1 = network.char()*(self.location[0][0]-1) + self.location[0][1] - 1
+        ind2 = network.char()*(self.location[1][0]-1) + self.location[1][1] - 1
         self.n1, self.n2 = network.getStart()[ind1], network.getStart()[ind2]
         # order neurons by start time
         if self.n1.getState() < self.n2.getState():
@@ -126,11 +126,26 @@ class ResourceNeuron(Neuron):
 
 
 class Network:
-    def __init__(self, Starts, Schedules, Resource):
-        self.character = (3, 1, 0)
+    def __init__(self, Starts, job, op, mac):
+        self.character = mac
         self.startNeurons = Starts
-        self.scheduleNeurons = Schedules
-        self.resourceNeurons = Resource
+        self.scheduleNeurons = []
+        for i in range(job):
+            for j in range(1, op):
+                self.scheduleNeurons.append(
+                    ScheduleNeuron(self.startNeurons[i*(op)+j-1],
+                                   self.startNeurons[i*(op)+j])
+                )
+        self.resourceNeurons = []
+        for k in range(1, mac+1):
+            for i in range(job*op):
+                if self.startNeurons[i].getLocation()[2] == k:
+                    for j in range(i+1, job*op):
+                        if self.startNeurons[j].getLocation()[2] == k:
+                            self.resourceNeurons.append(
+                                ResourceNeuron(self.startNeurons[i],
+                                               self.startNeurons[j])
+                            )
 
     def round(self):
         for n in self.startNeurons:
@@ -162,5 +177,5 @@ class Network:
     def getSch(self):
         return self.scheduleNeurons
 
-    def getChar(self):
+    def char(self):
         return self.character

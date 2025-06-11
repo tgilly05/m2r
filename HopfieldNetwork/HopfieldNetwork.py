@@ -127,6 +127,7 @@ class ResourceNeuron(Neuron):
 
 class Network:
     def __init__(self, Starts, job, op, mac):
+        self.timespan = 0
         self.character = mac
         self.startNeurons = Starts
         self.scheduleNeurons = []
@@ -179,3 +180,9 @@ class Network:
 
     def char(self):
         return self.character
+
+    def time(self):
+        for i in self.startNeurons:
+            if i.getEnd() > self.timespan:
+                self.timespan = i.getEnd()
+        return round(self.timespan)

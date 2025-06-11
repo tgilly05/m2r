@@ -23,13 +23,16 @@ for i in range(5000):
     myNet.round()
 outputList = [i.output()[0] for i in myNet.getStart()]
 print(outputList)
+print(myNet.time())
 myNet = HN.Network(ex2, 4, 3, 3)
 for i in range(5000):
     myNet.round()
 outputList = [i.output()[0] for i in myNet.getStart()]
 print(outputList)
+print(myNet.time())
 myNet = HN.Network(startsJS, 3, 4, 4)
 for i in range(5000):
     myNet.round()
 outputList = [i.output()[0] for i in myNet.getStart()]
 print(outputList)
+print(myNet.time())

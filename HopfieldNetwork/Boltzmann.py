@@ -1,0 +1,2 @@
+def boltzmann(self):
+    pass

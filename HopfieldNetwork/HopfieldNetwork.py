@@ -63,7 +63,9 @@ class StartNeuron(Neuron):
         return N
 
     def output(self):
-        return (round(self.state), (self.job, self.op, self.machine))
+        return (round(self.state),
+                (self.job, self.op, self.machine),
+                self.time)
 
     def getEnd(self):
         return self.state + self.time

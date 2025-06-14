@@ -30,10 +30,6 @@ class HopfieldNeuron(Neuron):
         self.threshold = threshold
 
     def ac(self, network, weight=0.01):
-        # sets threshold of earliest start to the end time of the previous op
-        if self.op != 1:
-            self.threshold = network.getNeurons()[
-                network.char()*(self.job-1)+self.op-2].getEnd()
         # the following sums are the shifts in start time based on
         # order contraints and machine use
         sum1 = 0  # the sum of interactions with neurons of the same job
@@ -267,6 +263,10 @@ class Hopfield():
         self.timespan = 0
         self.character = op
         self.neurons = Starts
+
+    def optimise(self):
+        for i in range(5000):
+            self.round()
 
     def round(self):
         for n in self.neurons:

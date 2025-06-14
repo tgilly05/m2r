@@ -20,6 +20,60 @@ class Neuron:
         self.state = self.hold
 
 
+class HopfieldNeuron(Neuron):
+    def __init__(self, job, op, machine, time, state=0, threshold=0):
+        super().__init__(state)
+        self.job = job
+        self.op = op
+        self.machine = machine
+        self.time = time
+        self.threshold = threshold
+
+    def ac(self, network, weight=0.01):
+        # sets threshold of earliest start to the end time of the previous op
+        if self.op != 1:
+            self.threshold = network.getNeurons()[
+                network.char()*(self.job-1)+self.op-2].getEnd()
+        sum1 = 0  # the sum of interactions with neurons of the same job
+        sum2 = 0  # the sum of interactions with neurons on the same machine
+        for neu in network.getNeurons():
+            if neu.getJob() == self.job:
+                if neu.getOp() == self.op+1:
+                    sum1 += self.schedule(self, neu)*weight*5
+                elif neu.getOp() == self.op-1:
+                    sum1 -= self.schedule(neu, self)*weight*5
+            if neu.getMac() == self.machine:
+                if self.state <= neu.getState():
+                    sum2 -= self.resource(self, neu)*weight
+                else:
+                    sum2 += self.resource(neu, self)*weight
+        N = sum1 + sum2 + self.state
+        # we hold this N for synchronus updates
+        if N <= self.threshold:
+            self.hold = self.threshold
+        self.hold = N
+
+    def schedule(self, n1, n2):
+        N = n1.getState() + n1.getTime() - n2.getState()
+        if N <= 0:
+            return 0
+        return N
+
+    def resource(self, n1, n2):
+        N = n2.getEnd() - n1.getState()
+        if N <= n1.getTime() + n2.getTime():
+            return N
+        return 0
+
+    def getTime(self):
+        return self.time
+
+    def output(self):
+        return (round(self.state),
+                (self.job, self.op, self.machine),
+                self.time)
+
+
 class StartNeuron(Neuron):
     def __init__(self, job, op, machine, time, state=0, threshold=0):
         super().__init__(state)
@@ -179,6 +233,38 @@ class Network:
 
     def getSch(self):
         return self.scheduleNeurons
+
+    def char(self):
+        return self.character
+
+    def time(self):
+        for i in self.startNeurons:
+            if i.getEnd() > self.timespan:
+                self.timespan = i.getEnd()
+        return round(self.timespan)
+
+
+class Hopfield():
+    def __init__(self, Starts, job, op, mac):
+        self.timespan = 0
+        self.character = mac
+        self.neurons = Starts
+
+    def round(self):
+        for n in self.neurons:
+            n.ac(self)
+        for n in self.neurons:
+            n.update()
+        # normalise
+        first = 1000
+        for i in self.neurons:
+            if i.getState() < first:
+                first = i.getState()
+        for i in self.neurons:
+            i.setState(i.getState()-first)
+
+    def getNeurons(self):
+        return self.neurons
 
     def char(self):
         return self.character
